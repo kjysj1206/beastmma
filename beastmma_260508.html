@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 김장용 종합격투기</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #7297DD;
+    --primary-dark: #5578c4;
+    --primary-light: #a0b8e8;
+    --accent: #e84040;
+    --accent2: #f5a623;
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #222639;
+    --card: #1e2235;
+    --card2: #252a3d;
+    --text: #e8eaf2;
+    --text2: #9aa3c2;
+    --text3: #6b7499;
+    --border: rgba(114,151,221,0.15);
+    --success: #4caf82;
+    --warning: #f5a623;
+    --danger: #e84040;
+    --sidebar-w: 200px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── LOGIN OVERLAY ── */
+  #loginOverlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #0a0d16 0%, #111827 50%, #0f1520 100%);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 32px;
+  }
+  #loginOverlay.hidden { display: none; }
+
+  .login-logo {
+    width: 130px; height: 130px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 3px solid var(--primary);
+    box-shadow: 0 0 40px rgba(114,151,221,0.4);
+  }
+  .login-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+  .login-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 26px;
+    color: var(--text);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .login-title span { color: var(--primary); }
+
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .login-box label { font-size: 13px; color: var(--text2); }
+  .login-box input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .login-box input:focus { border-color: var(--primary); }
+  .login-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .login-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .login-error { color: var(--danger); font-size: 13px; text-align: center; display: none; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 18px 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .sidebar-logo img {
+    width: 56px; height: 56px;
+    border-radius: 12px; object-fit: cover;
+    border: 2px solid var(--primary);
+    flex-shrink: 0;
+  }
+  .sidebar-logo-text { font-family: 'Black Han Sans', sans-serif; font-size: 15px; line-height: 1.5; word-break: keep-all; }
+  .sidebar-logo-text .sub { font-size: 11px; color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-weight: 300; margin-top: 2px; display: block; }
+
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active {
+    background: rgba(114,151,221,0.15);
+    color: var(--primary);
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 60%;
+    background: var(--primary);
+    border-radius: 0 3px 3px 0;
+  }
+  .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text3);
+    text-align: center;
+  }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-family: 'Black Han Sans', sans-serif; font-size: 18px; color: var(--primary); }
+  .topbar-date { font-size: 13px; color: var(--text3); }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+  }
+  .content::-webkit-scrollbar { width: 6px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .content::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+
+  /* pages */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .stat-icon { font-size: 28px; }
+  .stat-info .label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+  .stat-info .value { font-size: 24px; font-weight: 700; color: var(--text); }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* expiry list */
+  .expiry-item {
+    display: flex; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .expiry-item:last-child { border-bottom: none; }
+  .expiry-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+    color: #fff;
+  }
+  .expiry-info { flex: 1; }
+  .expiry-name { font-size: 14px; font-weight: 600; }
+  .expiry-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .dday-badge {
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .dday-red { background: rgba(232,64,64,0.15); color: var(--danger); }
+  .dday-orange { background: rgba(245,166,35,0.15); color: var(--warning); }
+  .dday-blue { background: rgba(114,151,221,0.15); color: var(--primary); }
+
+  /* progress bar */
+  .progress-bar { height: 4px; background: var(--bg3); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { color: var(--text3); font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
+  td { padding: 12px 14px; border-bottom: 1px solid rgba(114,151,221,0.07); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(114,151,221,0.05); }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: rgba(76,175,130,0.15); color: var(--success); }
+  .badge-red { background: rgba(232,64,64,0.15); color: var(--danger); }
+  .badge-orange { background: rgba(245,166,35,0.15); color: var(--warning); }
+  .badge-blue { background: rgba(114,151,221,0.15); color: var(--primary); }
+  .badge-gray { background: rgba(107,116,153,0.2); color: var(--text3); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 8px 16px; border-radius: 8px;
+    border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-danger { background: rgba(232,64,64,0.15); color: var(--danger); }
+  .btn-danger:hover { background: rgba(232,64,64,0.3); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg3); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-input {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; outline: none;
+    transition: border 0.2s; width: 220px;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .search-input:focus { border-color: var(--primary); }
+  select.filter-select {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; outline: none;
+    font-family: 'Noto Sans KR', sans-serif; cursor: pointer;
+  }
+
+  /* ── CALENDAR ── */
+  .calendar-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .cal-title { font-size: 18px; font-weight: 700; }
+  .cal-nav { display: flex; gap: 8px; }
+  .cal-nav button {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px;
+    padding: 6px 14px; cursor: pointer; font-size: 14px;
+    transition: background 0.2s;
+  }
+  .cal-nav button:hover { background: var(--primary); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .cal-day-header { background: var(--bg3); padding: 8px; text-align: center; font-size: 12px; font-weight: 600; color: var(--text3); }
+  .cal-day {
+    background: var(--card); min-height: 90px;
+    padding: 8px; cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .cal-day:hover { background: var(--card2); }
+  .cal-day.other-month .day-num { color: var(--text3); opacity: 0.4; }
+  .cal-day.today { background: rgba(114,151,221,0.08); }
+  .cal-day.today .day-num { color: var(--primary); font-weight: 700; }
+  .day-num { font-size: 13px; margin-bottom: 4px; }
+  .cal-event {
+    background: var(--primary); color: #fff;
+    font-size: 11px; border-radius: 4px;
+    padding: 2px 6px; margin-bottom: 2px;
+    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cal-event.event-done { background: var(--success); }
+  .cal-event.event-fee { background: var(--accent2); color: #1a1a1a; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 480px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: var(--bg3);
+    border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 13px; outline: none; transition: border 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+  .form-group textarea { resize: vertical; min-height: 72px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .count-badge { display: inline-flex; align-items: center; gap: 4px; }
+
+  @media (max-width: 768px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginOverlay">
+  <div class="login-logo"><img id="loginLogoImg" src="" alt="logo"></div>
+  <div class="login-title">🔥 김장용 <span>종합격투기</span></div>
+  <div class="login-box">
+    <label>접속 암호</label>
+    <input type="password" id="pwInput" placeholder="암호를 입력하세요" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">입장하기 🥊</button>
+    <div class="login-error" id="loginError">❌ 암호가 틀렸습니다</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <img id="sideLogoImg" src="" alt="logo">
+    <div class="sidebar-logo-text">
+      <div>김장용 종합격투기</div>
+      <div class="sub">관리 시스템</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="goPage('dashboard',this)">
+      <span class="nav-icon">🏠</span> 대시보드
+    </div>
+    <div class="nav-item" onclick="goPage('members',this)">
+      <span class="nav-icon">👥</span> 회원관리
+    </div>
+    <div class="nav-item" onclick="goPage('schedule',this)">
+      <span class="nav-icon">📅</span> 일정관리
+    </div>
+    <div class="nav-item" onclick="goPage('fees',this)">
+      <span class="nav-icon">💳</span> 요금관리
+    </div>
+    <div class="nav-item" onclick="goPage('sales',this)">
+      <span class="nav-icon">📊</span> 매출관리
+    </div>
+  </nav>
+  <div class="sidebar-footer">🥊 The Beast Kim</div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">대시보드</div>
+    <div class="topbar-date" id="topbarDate"></div>
+  </div>
+  <div class="content">
+
+    <!-- 대시보드 -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="two-col">
+        <div class="section-card">
+          <div class="section-title">⏰ 유효기간 만료 임박</div>
+          <div id="expiryList"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-title">📅 이번주 PT 일정</div>
+          <div id="todaySchedule"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 회원관리 -->
+    <div class="page" id="page-members">
+      <div class="toolbar">
+        <input class="search-input" placeholder="🔍 회원 검색..." oninput="renderMembers()" id="memberSearch">
+        <select class="filter-select" onchange="renderMembers()" id="memberFilter">
+          <option value="">전체 상태</option>
+          <option value="active">활성</option>
+          <option value="expiring">만료임박</option>
+          <option value="expired">만료</option>
+        </select>
+        <button class="btn btn-primary" onclick="openMemberModal()">+ 회원 추가</button>
+      </div>
+      <div class="section-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th><th>이름</th><th>프로그램</th><th>잔여 횟수</th>
+                <th>유효기간</th><th>상태</th><th>결제금액</th><th>재등록</th><th>특이사항</th><th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="memberTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 일정관리 -->
+    <div class="page" id="page-schedule">
+      <div class="calendar-header">
+        <div class="cal-title" id="calTitle"></div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div class="cal-nav">
+            <button onclick="changeMonth(-1)">◀</button>
+            <button onclick="changeMonth(1)">▶</button>
+          </div>
+          <button class="btn btn-primary" onclick="openEventModal()">+ 일정 추가</button>
+        </div>
+      </div>
+      <div class="section-card" style="padding:0;overflow:hidden;">
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+
+    <!-- 요금관리 -->
+    <div class="page" id="page-fees">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="openFeeModal()">+ 요금 추가</button>
+      </div>
+      <div class="section-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th><th>프로그램명</th><th>유효기간</th><th>횟수</th><th>금액</th><th>메모</th><th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="feeTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 매출관리 -->
+    <div class="page" id="page-sales">
+      <!-- 월 필터 -->
+      <div class="toolbar" style="margin-bottom:20px;">
+        <select class="filter-select" id="salesMonthFilter" onchange="renderSales()" style="font-size:14px;padding:9px 16px;">
+          <option value="">전체 기간</option>
+        </select>
+        <select class="filter-select" id="salesMethodFilter" onchange="renderSales()">
+          <option value="">전체 결제수단</option>
+          <option value="카드">카드</option>
+          <option value="현금">현금</option>
+          <option value="계좌이체">계좌이체</option>
+          <option value="기타">기타</option>
+        </select>
+        <button class="btn btn-primary" onclick="openPaymentModal()">+ 결제 직접 추가</button>
+      </div>
+
+      <!-- 요약 카드 -->
+      <div id="salesSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;"></div>
+
+      <!-- 결제수단별 / 프로그램별 -->
+      <div class="two-col" style="margin-bottom:20px;">
+        <div class="section-card">
+          <div class="section-title">💳 결제수단별 매출</div>
+          <div id="salesByMethod"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-title">🏋️ 프로그램별 매출</div>
+          <div id="salesByProgram"></div>
+        </div>
+      </div>
+
+      <!-- 상세 내역 -->
+      <div class="section-card">
+        <div class="section-title">📋 결제 상세 내역</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th><th>결제일</th><th>회원명</th><th>프로그램</th>
+                <th>결제금액</th><th>결제수단</th><th>구분</th><th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="paymentTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- content -->
+</div><!-- main -->
+
+<!-- 회원 모달 -->
+<div class="modal-overlay" id="memberModal">
+  <div class="modal" style="width:560px;">
+    <h3 id="memberModalTitle">회원 추가</h3>
+
+    <!-- 기본 정보 -->
+    <div style="font-size:12px;color:var(--primary);font-weight:700;margin-bottom:10px;letter-spacing:0.5px;">기본 정보</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>이름 *</label>
+        <input id="mName" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label>연락처</label>
+        <input id="mPhone" placeholder="010-0000-0000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:22px;">
+        <label style="margin:0;display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="mMinor" style="width:auto;" onchange="toggleGuardian()">
+          <span>미성년자</span>
+        </label>
+      </div>
+      <div class="form-group" id="guardianGroup" style="display:none;">
+        <label>보호자 연락처</label>
+        <input id="mGuardian" placeholder="010-0000-0000">
+      </div>
+    </div>
+
+    <!-- 수업 정보 -->
+    <div style="font-size:12px;color:var(--primary);font-weight:700;margin:14px 0 10px;letter-spacing:0.5px;">수업 정보</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>프로그램 *</label>
+        <select id="mClass" onchange="onProgramChange()">
+          <option value="">-- 선택 --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>총 횟수</label>
+        <input id="mTotal" type="number" placeholder="자동입력 또는 직접 입력" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>시작일</label>
+        <input id="mStart" type="date" onchange="autoCalcExpiry()">
+      </div>
+      <div class="form-group">
+        <label>유효기간 만료일 *</label>
+        <input id="mExpiry" type="date">
+      </div>
+    </div>
+
+    <!-- 결제 정보 -->
+    <div style="font-size:12px;color:var(--primary);font-weight:700;margin:14px 0 10px;letter-spacing:0.5px;">결제 정보</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>결제금액</label>
+        <input id="mPayAmount" type="number" placeholder="자동입력 또는 직접 입력">
+      </div>
+      <div class="form-group">
+        <label>결제수단</label>
+        <select id="mPayMethod">
+          <option value="카드">카드</option>
+          <option value="현금">현금</option>
+          <option value="계좌이체">계좌이체</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>결제일</label>
+        <input id="mPayDate" type="date">
+      </div>
+      <div class="form-group">
+        <label>재등록 횟수</label>
+        <input id="mReregCount" type="number" placeholder="0" min="0" readonly style="background:var(--bg);color:var(--text3);">
+      </div>
+    </div>
+
+    <!-- 특이사항 -->
+    <div style="font-size:12px;color:var(--primary);font-weight:700;margin:14px 0 10px;letter-spacing:0.5px;">특이사항</div>
+    <div class="form-group">
+      <textarea id="mNote" placeholder="알레르기, 부상 이력, 기타 메모..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('memberModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveMember()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 재등록 모달 -->
+<div class="modal-overlay" id="reregModal">
+  <div class="modal">
+    <h3>재등록 처리</h3>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;" id="reregMemberName"></div>
+    <div class="form-group">
+      <label>프로그램 *</label>
+      <select id="rrClass" onchange="onRrProgramChange()">
+        <option value="">-- 선택 --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>시작일</label>
+        <input id="rrStart" type="date" onchange="autoCalcRrExpiry()">
+      </div>
+      <div class="form-group">
+        <label>만료일 *</label>
+        <input id="rrExpiry" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>결제금액</label>
+        <input id="rrAmount" type="number" placeholder="자동입력 또는 직접 입력">
+      </div>
+      <div class="form-group">
+        <label>결제수단</label>
+        <select id="rrMethod">
+          <option value="카드">카드</option>
+          <option value="현금">현금</option>
+          <option value="계좌이체">계좌이체</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>총 횟수</label>
+      <input id="rrTotal" type="number" placeholder="자동입력 또는 직접 입력" min="0">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reregModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveRereg()">재등록 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 일정 모달 -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal">
+    <h3 id="eventModalTitle">일정 추가</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>날짜 *</label>
+        <input id="evDate" type="date">
+      </div>
+      <div class="form-group">
+        <label>시간</label>
+        <input id="evTime" type="time">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>회원 선택</label>
+      <select id="evMember">
+        <option value="">-- 회원 선택 --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>내용</label>
+      <input id="evNote" placeholder="수업 내용, 메모 등">
+    </div>
+    <div class="form-group" id="deductGroup" style="display:none;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="evDeduct" style="width:auto;"> 수업 완료 시 횟수 차감
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('eventModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveEvent()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 요금 모달 -->
+<div class="modal-overlay" id="feeModal">
+  <div class="modal">
+    <h3 id="feeModalTitle">프로그램 추가</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>프로그램명 *</label>
+        <input id="fClass" placeholder="예: PT 20회, 복싱 3개월">
+      </div>
+      <div class="form-group">
+        <label>유효기간</label>
+        <input id="fDuration" placeholder="예: 3개월, 6개월">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>횟수 (횟수제인 경우)</label>
+        <input id="fSessions" type="number" placeholder="예: 20" min="0">
+      </div>
+      <div class="form-group">
+        <label>금액 *</label>
+        <input id="fAmount" type="number" placeholder="500000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>메모</label>
+      <textarea id="fNote" placeholder="추가 설명..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('feeModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveFee()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG (여기서 암호 수정) ──
+const PASSWORD = "06131101"; // ← 이 암호를 원하시는 것으로 바꾸세요
+
+// ── STATE ──
+let members  = JSON.parse(localStorage.getItem('kjy_members')  || '[]');
+let events   = JSON.parse(localStorage.getItem('kjy_events')   || '[]');
+let fees     = JSON.parse(localStorage.getItem('kjy_fees')     || '[]');
+let payments = JSON.parse(localStorage.getItem('kjy_payments') || '[]');
+let editMemberId = null, editEventId = null, editFeeId = null;
+let calYear, calMonth;
+
+function save() {
+  localStorage.setItem('kjy_members',  JSON.stringify(members));
+  localStorage.setItem('kjy_payments', JSON.stringify(payments));
+  localStorage.setItem('kjy_events',  JSON.stringify(events));
+  localStorage.setItem('kjy_fees',    JSON.stringify(fees));
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ── LOGIN ──
+const LOGO_SRC = "data:image/png;base64,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";
+document.getElementById('loginLogoImg').src = LOGO_SRC;
+document.getElementById('sideLogoImg').src = LOGO_SRC;
+
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === PASSWORD) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    init();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+// ── INIT ──
+function init() {
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  document.getElementById('topbarDate').textContent =
+    now.toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  populateSalesMonthFilter();
+  renderDashboard(); renderMembers(); renderCalendar(); renderFees(); renderSales();
+}
+
+// ── NAVIGATION ──
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  const titles = {dashboard:'대시보드',members:'회원관리',schedule:'일정관리',fees:'요금관리',sales:'매출관리'};
+  document.getElementById('topbarTitle').textContent = titles[id];
+}
+
+// ── MEMBER UTILS ──
+function memberStatus(m) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(m.expiry);
+  const diff = Math.ceil((exp - today) / 86400000);
+  if (diff < 0)  return {label:'만료',cls:'badge-red',diff,color:'danger'};
+  if (diff <= 14) return {label:'만료임박',cls:'badge-orange',diff,color:'warning'};
+  return {label:'활성',cls:'badge-green',diff,color:'success'};
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const expiring = members.filter(m => { const s=memberStatus(m); return s.diff>=0&&s.diff<=14; }).length;
+  const active   = members.filter(m => memberStatus(m).diff > 14).length;
+  const total    = active + expiring;
+
+  document.getElementById('statGrid').innerHTML = [
+    {icon:'👥',label:'전체 회원',value:total},
+    {icon:'✅',label:'활성 회원',value:active},
+    {icon:'⚠️',label:'만료 임박',value:expiring},
+  ].map(s=>`
+    <div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-info"><div class="label">${s.label}</div><div class="value">${s.value}</div></div>
+    </div>`).join('');
+
+  // expiry list sorted
+  const sorted = [...members].filter(m=>m.expiry).sort((a,b)=>{
+    return new Date(a.expiry)-new Date(b.expiry);
+  }).slice(0,8);
+
+  document.getElementById('expiryList').innerHTML = sorted.length ? sorted.map(m=>{
+    const st = memberStatus(m);
+    const maxDays = 90;
+    const pct = Math.max(0, Math.min(100, (st.diff/maxDays)*100));
+    const bdgcls = st.diff<0?'dday-red':st.diff<=14?'dday-orange':'dday-blue';
+    const fillColor = st.diff<0?'var(--danger)':st.diff<=14?'var(--warning)':'var(--primary)';
+    return `
+    <div class="expiry-item">
+      <div class="expiry-avatar">${m.name[0]}</div>
+      <div class="expiry-info">
+        <div class="expiry-name">${m.name} <span style="font-size:11px;color:var(--text3);font-weight:400;">${m.class}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      </div>
+      <div class="dday-badge ${bdgcls}">${st.diff<0?'만료':st.diff===0?'D-Day':'D-'+st.diff}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);text-align:center;padding:20px;">등록된 회원이 없습니다</div>';
+
+  // this week schedule
+  const todayStr = today.toISOString().slice(0,10);
+  const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+  const weekEnd   = new Date(today); weekEnd.setDate(today.getDate() + (6 - today.getDay()));
+  const weekStartStr = weekStart.toISOString().slice(0,10);
+  const weekEndStr   = weekEnd.toISOString().slice(0,10);
+  const weekEvs = events.filter(e=>e.date>=weekStartStr && e.date<=weekEndStr)
+    .sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  const dayNames = ['일','월','화','수','목','금','토'];
+  document.getElementById('todaySchedule').innerHTML = weekEvs.length ? weekEvs.map(e=>{
+    const d = new Date(e.date); const isToday = e.date===todayStr;
+    return `
+    <div class="expiry-item">
+      <div class="expiry-avatar" style="background:${isToday?'var(--accent2)':'var(--primary-dark)'};font-size:12px;flex-direction:column;display:flex;align-items:center;justify-content:center;line-height:1.2;">
+        <span style="font-size:10px;">${dayNames[d.getDay()]}</span>
+        <span>🥊</span>
+      </div>
+      <div class="expiry-info">
+        <div class="expiry-name">${e.memberName||'미지정'} ${e.time?'<span style="color:var(--text3);font-size:12px;">'+e.time+'</span>':''}</div>
+        <div class="expiry-sub">${e.note||''}</div>
+      </div>
+      <div class="dday-badge ${e.done?'dday-blue':isToday?'dday-orange':'dday-blue'}">${e.done?'완료':isToday?'오늘':'예정'}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);text-align:center;padding:20px;">이번주 일정 없음 💪</div>';
+}
+
+// ── MEMBERS ──
+function renderMembers() {
+  const q = (document.getElementById('memberSearch').value||'').toLowerCase();
+  const f = document.getElementById('memberFilter').value;
+  let list = [...members];
+  if (q) list = list.filter(m=>m.name.includes(q)||(m.class||'').includes(q));
+  if (f) list = list.filter(m=>memberStatus(m).label===(f==='active'?'활성':f==='expiring'?'만료임박':'만료'));
+  document.getElementById('memberTbody').innerHTML = list.length ? list.map((m,i)=>{
+    const st = memberStatus(m);
+    const fee = fees.find(f=>f.id===m.feeId);
+    const hasCnt = fee?.sessions > 0;
+    const remain = hasCnt ? (m.total||0)-(m.used||0) : null;
+    const reregCount = m.reregHistory ? m.reregHistory.length : 0;
+    return `<tr>
+      <td>${i+1}</td>
+      <td>
+        <strong>${m.name}</strong>${m.minor?'<span style="font-size:10px;margin-left:4px;background:rgba(245,166,35,0.15);color:var(--warning);padding:1px 5px;border-radius:4px;">미성년</span>':''}
+        <br><span style="font-size:11px;color:var(--text3);">${m.phone||''}</span>
+      </td>
+      <td>${m.class||'-'}</td>
+      <td>${hasCnt?`<span class="badge badge-blue">${remain}/${m.total||0}회</span>`:'<span class="badge badge-gray">-</span>'}</td>
+      <td>${m.expiry||'-'}</td>
+      <td><span class="badge ${st.cls}">${st.label}</span></td>
+      <td>${m.payAmount?Number(m.payAmount).toLocaleString()+'원':'-'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openReregModal('${m.id}')" title="재등록">🔄 재등록</button>
+        ${reregCount>0?`<span class="badge badge-blue" style="margin-left:4px;">${reregCount}회</span>`:''}
+      </td>
+      <td style="max-width:120px;font-size:12px;color:var(--text2);">${m.note||'-'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openMemberModal('${m.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}')">삭제</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:30px;">등록된 회원이 없습니다</td></tr>';
+}
+
+function toggleGuardian() {
+  const isMinor = document.getElementById('mMinor').checked;
+  document.getElementById('guardianGroup').style.display = isMinor ? 'block' : 'none';
+}
+
+function onProgramChange() {
+  const sel = document.getElementById('mClass');
+  const feeId = sel.value;
+  const fee = fees.find(f=>f.id===feeId);
+  if (fee) {
+    if (fee.sessions) document.getElementById('mTotal').value = fee.sessions;
+    if (fee.amount)   document.getElementById('mPayAmount').value = fee.amount;
+    autoCalcExpiry();
+  }
+}
+
+function autoCalcExpiry() {
+  const startVal = document.getElementById('mStart').value;
+  const feeId = document.getElementById('mClass').value;
+  const fee = fees.find(f=>f.id===feeId);
+  if (!startVal || !fee?.duration) return;
+  const start = new Date(startVal);
+  const dur = fee.duration;
+  // parse duration like "3개월", "6개월", "1년"
+  const mMatch = dur.match(/(\d+)\s*개월/);
+  const yMatch = dur.match(/(\d+)\s*년/);
+  const wMatch = dur.match(/(\d+)\s*주/);
+  if (mMatch) start.setMonth(start.getMonth()+parseInt(mMatch[1]));
+  else if (yMatch) start.setFullYear(start.getFullYear()+parseInt(yMatch[1]));
+  else if (wMatch) start.setDate(start.getDate()+parseInt(wMatch[1])*7);
+  start.setDate(start.getDate()-1);
+  document.getElementById('mExpiry').value = start.toISOString().slice(0,10);
+}
+
+function openMemberModal(id) {
+  editMemberId = id || null;
+  const m = id ? members.find(x=>x.id===id) : null;
+  document.getElementById('memberModalTitle').textContent = id ? '회원 수정' : '회원 추가';
+  document.getElementById('mName').value      = m?.name||'';
+  document.getElementById('mPhone').value     = m?.phone||'';
+  document.getElementById('mMinor').checked   = m?.minor||false;
+  document.getElementById('mGuardian').value  = m?.guardian||'';
+  document.getElementById('guardianGroup').style.display = m?.minor ? 'block' : 'none';
+  document.getElementById('mTotal').value     = m?.total||'';
+  document.getElementById('mStart').value     = m?.start||'';
+  document.getElementById('mExpiry').value    = m?.expiry||'';
+  document.getElementById('mPayAmount').value = m?.payAmount||'';
+  document.getElementById('mPayMethod').value = m?.payMethod||'카드';
+  document.getElementById('mPayDate').value   = m?.payDate||'';
+  document.getElementById('mReregCount').value= m?.reregHistory?.length||0;
+  document.getElementById('mNote').value      = m?.note||'';
+  // populate program select
+  const sel = document.getElementById('mClass');
+  sel.innerHTML = '<option value="">-- 프로그램 선택 --</option>' +
+    fees.map(f=>`<option value="${f.id}" ${m?.feeId===f.id?'selected':''}>${f.class}${f.amount?' ('+Number(f.amount).toLocaleString()+'원)':''}</option>`).join('');
+  document.getElementById('memberModal').classList.add('open');
+}
+
+function saveMember() {
+  const name   = document.getElementById('mName').value.trim();
+  const expiry = document.getElementById('mExpiry').value;
+  if (!name || !expiry) return alert('이름과 유효기간은 필수입니다!');
+  const feeId = document.getElementById('mClass').value;
+  const fee = fees.find(f=>f.id===feeId);
+  const isNew = !editMemberId;
+  const obj = {
+    id:         editMemberId || uid(),
+    name, expiry,
+    phone:      document.getElementById('mPhone').value.trim(),
+    minor:      document.getElementById('mMinor').checked,
+    guardian:   document.getElementById('mGuardian').value.trim(),
+    feeId,
+    class:      fee?.class || '',
+    total:      parseInt(document.getElementById('mTotal').value)||0,
+    start:      document.getElementById('mStart').value,
+    payAmount:  parseInt(document.getElementById('mPayAmount').value)||0,
+    payMethod:  document.getElementById('mPayMethod').value,
+    payDate:    document.getElementById('mPayDate').value,
+    note:       document.getElementById('mNote').value.trim(),
+    used:       editMemberId ? (members.find(x=>x.id===editMemberId)?.used||0) : 0,
+    reregHistory: editMemberId ? (members.find(x=>x.id===editMemberId)?.reregHistory||[]) : [],
+  };
+  if (editMemberId) members = members.map(m=>m.id===editMemberId?obj:m);
+  else members.push(obj);
+  // 신규 등록 시 결제내역 자동 생성
+  if (isNew && obj.payAmount > 0 && obj.payDate) {
+    payments.push({
+      id: uid(),
+      date: obj.payDate,
+      memberId: obj.id,
+      memberName: obj.name,
+      feeId: obj.feeId,
+      feeName: fee?.class||'',
+      amount: obj.payAmount,
+      method: obj.payMethod,
+      type: '신규',
+      note: '',
+    });
+  }
+  save(); closeModal('memberModal'); renderMembers(); renderDashboard(); renderSales();
+}
+
+function deleteMember(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  members = members.filter(m=>m.id!==id); save(); renderMembers(); renderDashboard();
+}
+
+// ── REREG ──
+let reregMemberId = null;
+
+function openReregModal(id) {
+  reregMemberId = id;
+  const m = members.find(x=>x.id===id);
+  document.getElementById('reregMemberName').textContent = `회원: ${m.name} | 현재 프로그램: ${m.class||'-'} | 재등록 ${m.reregHistory?.length||0}회`;
+  const sel = document.getElementById('rrClass');
+  sel.innerHTML = '<option value="">-- 프로그램 선택 --</option>' +
+    fees.map(f=>`<option value="${f.id}">${f.class}${f.amount?' ('+Number(f.amount).toLocaleString()+'원)':''}</option>`).join('');
+  document.getElementById('rrStart').value = '';
+  document.getElementById('rrExpiry').value = '';
+  document.getElementById('rrAmount').value = '';
+  document.getElementById('rrTotal').value = '';
+  document.getElementById('rrMethod').value = '카드';
+  document.getElementById('reregModal').classList.add('open');
+}
+
+function onRrProgramChange() {
+  const feeId = document.getElementById('rrClass').value;
+  const fee = fees.find(f=>f.id===feeId);
+  if (fee) {
+    if (fee.sessions) document.getElementById('rrTotal').value = fee.sessions;
+    if (fee.amount)   document.getElementById('rrAmount').value = fee.amount;
+    autoCalcRrExpiry();
+  }
+}
+
+function autoCalcRrExpiry() {
+  const startVal = document.getElementById('rrStart').value;
+  const feeId = document.getElementById('rrClass').value;
+  const fee = fees.find(f=>f.id===feeId);
+  if (!startVal || !fee?.duration) return;
+  const start = new Date(startVal);
+  const dur = fee.duration;
+  const mMatch = dur.match(/(\d+)\s*개월/);
+  const yMatch = dur.match(/(\d+)\s*년/);
+  const wMatch = dur.match(/(\d+)\s*주/);
+  if (mMatch) start.setMonth(start.getMonth()+parseInt(mMatch[1]));
+  else if (yMatch) start.setFullYear(start.getFullYear()+parseInt(yMatch[1]));
+  else if (wMatch) start.setDate(start.getDate()+parseInt(wMatch[1])*7);
+  start.setDate(start.getDate()-1);
+  document.getElementById('rrExpiry').value = start.toISOString().slice(0,10);
+}
+
+function saveRereg() {
+  const feeId = document.getElementById('rrClass').value;
+  const expiry = document.getElementById('rrExpiry').value;
+  if (!feeId || !expiry) return alert('프로그램과 만료일은 필수입니다!');
+  const fee = fees.find(f=>f.id===feeId);
+  const payDate = document.getElementById('rrStart').value || new Date().toISOString().slice(0,10);
+  const payAmount = parseInt(document.getElementById('rrAmount').value)||0;
+  const payMethod = document.getElementById('rrMethod').value;
+  const record = {
+    date: payDate, feeId, class: fee?.class||'',
+    start: document.getElementById('rrStart').value,
+    expiry, total: parseInt(document.getElementById('rrTotal').value)||0,
+    amount: payAmount, method: payMethod,
+  };
+  const m = members.find(x=>x.id===reregMemberId);
+  members = members.map(mb=>{
+    if (mb.id!==reregMemberId) return mb;
+    return {
+      ...mb,
+      feeId, class: fee?.class||mb.class,
+      start: record.start, expiry: record.expiry,
+      total: record.total||mb.total, used: 0,
+      payAmount: record.amount||mb.payAmount, payMethod: record.method,
+      reregHistory: [...(mb.reregHistory||[]), record],
+    };
+  });
+  if (payAmount > 0) {
+    payments.push({
+      id: uid(), date: payDate,
+      memberId: reregMemberId, memberName: m?.name||'',
+      feeId, feeName: fee?.class||'',
+      amount: payAmount, method: payMethod, type: '재등록', note: '',
+    });
+  }
+  save(); closeModal('reregModal'); renderMembers(); renderDashboard(); renderSales();
+  alert('재등록이 완료됐어요! 🎉');
+}
+
+// ── CALENDAR ──
+function renderCalendar() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('calTitle').textContent = `${calYear}년 ${months[calMonth]}`;
+  const first = new Date(calYear, calMonth, 1);
+  const last  = new Date(calYear, calMonth+1, 0);
+  const startDow = first.getDay();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = ['일','월','화','수','목','금','토'];
+  let html = days.map(d=>`<div class="cal-day-header">${d}</div>`).join('');
+  let cells = [];
+  for (let i=0;i<startDow;i++) {
+    const d = new Date(calYear, calMonth, -startDow+i+1);
+    cells.push({date:d, cur:false});
+  }
+  for (let i=1;i<=last.getDate();i++) cells.push({date:new Date(calYear,calMonth,i),cur:true});
+  while (cells.length%7!==0) {
+    const d = new Date(calYear, calMonth+1, cells.length-startDow-last.getDate()+1);
+    cells.push({date:d,cur:false});
+  }
+  cells.forEach(c=>{
+    const ds = c.date.toISOString().slice(0,10);
+    const isToday = c.date.getTime()===today.getTime() && c.cur;
+    const dayEvs = events.filter(e=>e.date===ds);
+    const evHtml = dayEvs.map(e=>`
+      <div class="cal-event ${e.done?'event-done':''}" onclick="openEventModal('${e.id}');event.stopPropagation();" title="${e.memberName||''} ${e.note||''}">
+        ${e.time?e.time+' ':''}${e.memberName||e.note||'일정'}
+      </div>`).join('');
+    html += `<div class="cal-day ${c.cur?'':'other-month'} ${isToday?'today':''}" onclick="openEventModal(null,'${ds}')">
+      <div class="day-num">${c.date.getDate()}</div>${evHtml}</div>`;
+  });
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function changeMonth(d) { calMonth+=d; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+
+function openEventModal(id, dateStr) {
+  editEventId = id||null;
+  const e = id ? events.find(x=>x.id===id) : null;
+  document.getElementById('eventModalTitle').textContent = id ? '일정 수정' : '일정 추가';
+  document.getElementById('evDate').value   = e?.date || dateStr || '';
+  document.getElementById('evTime').value   = e?.time || '';
+  document.getElementById('evNote').value   = e?.note || '';
+  document.getElementById('evDeduct').checked = e?.deduct||false;
+  const sel = document.getElementById('evMember');
+  sel.innerHTML = '<option value="">-- 회원 선택 --</option>' +
+    members.map(m=>`<option value="${m.id}" ${e?.memberId===m.id?'selected':''}>${m.name} (${m.class})</option>`).join('');
+  updateDeductVisibility();
+  sel.onchange = updateDeductVisibility;
+  document.getElementById('eventModal').classList.add('open');
+}
+
+function updateDeductVisibility() {
+  const sel = document.getElementById('evMember');
+  const mid = sel.value;
+  const m = members.find(x=>x.id===mid);
+  const fee = m ? fees.find(f=>f.id===m.feeId) : null;
+  document.getElementById('deductGroup').style.display = (fee?.sessions>0) ? 'block' : 'none';
+}
+
+function saveEvent() {
+  const date = document.getElementById('evDate').value;
+  if (!date) return alert('날짜를 선택해주세요!');
+  const mid  = document.getElementById('evMember').value;
+  const m    = members.find(x=>x.id===mid);
+  const fee  = m ? fees.find(f=>f.id===m.feeId) : null;
+  const deduct = document.getElementById('evDeduct').checked && fee?.sessions>0;
+  const obj = {
+    id: editEventId||uid(), date,
+    time: document.getElementById('evTime').value,
+    memberId: mid, memberName: m?.name||'',
+    note: document.getElementById('evNote').value.trim(),
+    deduct, done: deduct,
+  };
+  if (deduct && m) { m.used = (m.used||0)+1; save(); }
+  if (editEventId) events = events.map(e=>e.id===editEventId?obj:e);
+  else events.push(obj);
+  save(); closeModal('eventModal'); renderCalendar(); renderDashboard();
+}
+
+// ── FEES ──
+function renderFees() {
+  document.getElementById('feeTbody').innerHTML = fees.length ? fees.map((f,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${f.class}</strong></td>
+      <td>${f.duration||'-'}</td>
+      <td>${f.sessions?f.sessions+'회':'-'}</td>
+      <td><strong>${Number(f.amount).toLocaleString()}원</strong></td>
+      <td style="font-size:12px;color:var(--text2);">${f.note||'-'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openFeeModal('${f.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFee('${f.id}')">삭제</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:30px;">등록된 프로그램이 없습니다</td></tr>';
+}
+
+function openFeeModal(id) {
+  editFeeId = id||null;
+  const f = id ? fees.find(x=>x.id===id) : null;
+  document.getElementById('feeModalTitle').textContent = id ? '프로그램 수정' : '프로그램 추가';
+  document.getElementById('fClass').value    = f?.class||'';
+  document.getElementById('fDuration').value = f?.duration||'';
+  document.getElementById('fSessions').value = f?.sessions||'';
+  document.getElementById('fAmount').value   = f?.amount||'';
+  document.getElementById('fNote').value     = f?.note||'';
+  document.getElementById('feeModal').classList.add('open');
+}
+
+function saveFee() {
+  const cls = document.getElementById('fClass').value.trim();
+  const amt = document.getElementById('fAmount').value;
+  if (!cls||!amt) return alert('프로그램명과 금액은 필수입니다!');
+  const obj = {
+    id: editFeeId||uid(),
+    class: cls,
+    duration: document.getElementById('fDuration').value.trim(),
+    sessions: parseInt(document.getElementById('fSessions').value)||0,
+    amount: parseInt(amt),
+    note: document.getElementById('fNote').value.trim(),
+  };
+  if (editFeeId) fees = fees.map(f=>f.id===editFeeId?obj:f);
+  else fees.push(obj);
+  save(); closeModal('feeModal'); renderFees();
+}
+
+function deleteFee(id) {
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+  fees = fees.filter(f=>f.id!==id); save(); renderFees();
+}
+
+// ── SALES ──
+function populateSalesMonthFilter() {
+  const sel = document.getElementById('salesMonthFilter');
+  const months = new Set(payments.map(p=>p.date?.slice(0,7)).filter(Boolean));
+  // also add current month
+  months.add(new Date().toISOString().slice(0,7));
+  const sorted = [...months].sort().reverse();
+  sel.innerHTML = '<option value="">전체 기간</option>' +
+    sorted.map(m=>{
+      const [y,mo] = m.split('-');
+      return `<option value="${m}">${y}년 ${parseInt(mo)}월</option>`;
+    }).join('');
+}
+
+function renderSales() {
+  const monthF  = document.getElementById('salesMonthFilter').value;
+  const methodF = document.getElementById('salesMethodFilter').value;
+  let list = [...payments];
+  if (monthF)  list = list.filter(p=>p.date?.startsWith(monthF));
+  if (methodF) list = list.filter(p=>p.method===methodF);
+  list.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const total   = list.reduce((s,p)=>s+p.amount,0);
+  const countNew = list.filter(p=>p.type==='신규').length;
+  const countRe  = list.filter(p=>p.type==='재등록').length;
+  const avgAmt   = list.length ? Math.round(total/list.length) : 0;
+
+  // summary cards
+  document.getElementById('salesSummary').innerHTML = [
+    {icon:'💰',label:'총 매출',value:total.toLocaleString()+'원',color:'var(--primary)'},
+    {icon:'📋',label:'결제 건수',value:list.length+'건',color:'var(--success)'},
+    {icon:'🆕',label:'신규',value:countNew+'건',color:'var(--accent2)'},
+    {icon:'🔄',label:'재등록',value:countRe+'건',color:'var(--primary-light)'},
+  ].map(s=>`
+    <div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-info">
+        <div class="label">${s.label}</div>
+        <div class="value" style="font-size:20px;color:${s.color}">${s.value}</div>
+      </div>
+    </div>`).join('');
+
+  // by method
+  const byMethod = {};
+  list.forEach(p=>{ byMethod[p.method]=(byMethod[p.method]||0)+p.amount; });
+  document.getElementById('salesByMethod').innerHTML = Object.entries(byMethod).length
+    ? Object.entries(byMethod).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+        const pct = total ? Math.round(v/total*100) : 0;
+        return `<div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:13px;font-weight:600;">${k}</span>
+            <span style="font-size:13px;color:var(--primary);font-weight:700;">${v.toLocaleString()}원 <span style="color:var(--text3);font-weight:400;">(${pct}%)</span></span>
+          </div>
+          <div class="progress-bar" style="height:6px;">
+            <div class="progress-fill" style="width:${pct}%;background:var(--primary);"></div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--text3);text-align:center;padding:20px;">데이터 없음</div>';
+
+  // by program
+  const byProg = {};
+  list.forEach(p=>{ const k=p.feeName||'기타'; byProg[k]=(byProg[k]||0)+p.amount; });
+  document.getElementById('salesByProgram').innerHTML = Object.entries(byProg).length
+    ? Object.entries(byProg).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+        const pct = total ? Math.round(v/total*100) : 0;
+        return `<div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:13px;font-weight:600;">${k}</span>
+            <span style="font-size:13px;color:var(--accent2);font-weight:700;">${v.toLocaleString()}원 <span style="color:var(--text3);font-weight:400;">(${pct}%)</span></span>
+          </div>
+          <div class="progress-bar" style="height:6px;">
+            <div class="progress-fill" style="width:${pct}%;background:var(--accent2);"></div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--text3);text-align:center;padding:20px;">데이터 없음</div>';
+
+  // detail table
+  document.getElementById('paymentTbody').innerHTML = list.length
+    ? list.map((p,i)=>`<tr>
+        <td>${i+1}</td>
+        <td>${p.date}</td>
+        <td>${p.memberName||'-'}</td>
+        <td>${p.feeName||'-'}</td>
+        <td><strong>${p.amount.toLocaleString()}원</strong></td>
+        <td><span class="badge badge-blue">${p.method}</span></td>
+        <td><span class="badge ${p.type==='신규'?'badge-green':p.type==='재등록'?'badge-orange':'badge-gray'}">${p.type||'-'}</span></td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deletePayment('${p.id}')">삭제</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">결제 내역이 없습니다</td></tr>';
+}
+
+let editPaymentId = null;
+function openPaymentModal(id) {
+  editPaymentId = id||null;
+  const p = id ? payments.find(x=>x.id===id) : null;
+  document.getElementById('paymentModalTitle').textContent = id ? '결제 내역 수정' : '결제 내역 추가';
+  document.getElementById('pmDate').value   = p?.date || new Date().toISOString().slice(0,10);
+  document.getElementById('pmAmount').value = p?.amount||'';
+  document.getElementById('pmMethod').value = p?.method||'카드';
+  document.getElementById('pmType').value   = p?.type||'신규';
+  document.getElementById('pmNote').value   = p?.note||'';
+  document.getElementById('pmMember').innerHTML = '<option value="">-- 선택 안 함 --</option>' +
+    members.map(m=>`<option value="${m.id}" ${p?.memberId===m.id?'selected':''}>${m.name}</option>`).join('');
+  document.getElementById('pmFee').innerHTML = '<option value="">-- 선택 안 함 --</option>' +
+    fees.map(f=>`<option value="${f.id}" ${p?.feeId===f.id?'selected':''}>${f.class} (${Number(f.amount).toLocaleString()}원)</option>`).join('');
+  document.getElementById('paymentModal').classList.add('open');
+}
+
+function onPmFeeChange() {
+  const feeId = document.getElementById('pmFee').value;
+  const fee = fees.find(f=>f.id===feeId);
+  if (fee?.amount) document.getElementById('pmAmount').value = fee.amount;
+}
+
+function savePayment() {
+  const date   = document.getElementById('pmDate').value;
+  const amount = parseInt(document.getElementById('pmAmount').value);
+  if (!date || !amount) return alert('결제일과 금액은 필수입니다!');
+  const mid = document.getElementById('pmMember').value;
+  const fid = document.getElementById('pmFee').value;
+  const obj = {
+    id: editPaymentId||uid(), date, amount,
+    memberId: mid,
+    memberName: members.find(m=>m.id===mid)?.name||'',
+    feeId: fid,
+    feeName: fees.find(f=>f.id===fid)?.class||'',
+    method: document.getElementById('pmMethod').value,
+    type:   document.getElementById('pmType').value,
+    note:   document.getElementById('pmNote').value.trim(),
+  };
+  if (editPaymentId) payments = payments.map(p=>p.id===editPaymentId?obj:p);
+  else payments.push(obj);
+  save(); populateSalesMonthFilter(); closeModal('paymentModal'); renderSales();
+}
+
+function deletePayment(id) {
+  if (!confirm('결제 내역을 삭제할까요?')) return;
+  payments = payments.filter(p=>p.id!==id);
+  save(); renderSales();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
+<!-- 결제 직접 추가 모달 -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <h3 id="paymentModalTitle">결제 내역 추가</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>결제일 *</label>
+        <input id="pmDate" type="date">
+      </div>
+      <div class="form-group">
+        <label>회원 선택</label>
+        <select id="pmMember">
+          <option value="">-- 선택 안 함 --</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>프로그램</label>
+        <select id="pmFee" onchange="onPmFeeChange()">
+          <option value="">-- 선택 안 함 --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>구분</label>
+        <select id="pmType">
+          <option value="신규">신규</option>
+          <option value="재등록">재등록</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>결제금액 *</label>
+        <input id="pmAmount" type="number" placeholder="자동입력 또는 직접 입력">
+      </div>
+      <div class="form-group">
+        <label>결제수단</label>
+        <select id="pmMethod">
+          <option value="카드">카드</option>
+          <option value="현금">현금</option>
+          <option value="계좌이체">계좌이체</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>메모</label>
+      <input id="pmNote" placeholder="추가 메모">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('paymentModal')">취소</button>
+      <button class="btn btn-primary" onclick="savePayment()">저장</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
