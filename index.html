@@ -512,7 +512,7 @@
           <table>
             <thead>
               <tr>
-                <th>No.</th><th>프로그램명</th><th>유효기간</th><th>횟수</th><th>금액</th><th>메모</th><th>관리</th>
+                <th>No.</th><th>구분</th><th>프로그램명</th><th>유효기간</th><th>횟수</th><th>금액</th><th>메모</th><th>관리</th>
               </tr>
             </thead>
             <tbody id="feeTbody"></tbody>
@@ -535,7 +535,8 @@
           <option value="계좌이체">계좌이체</option>
           <option value="기타">기타</option>
         </select>
-        <button class="btn btn-primary" onclick="openPaymentModal()">+ 결제 직접 추가</button>
+        <button class="btn btn-primary" onclick="openPaymentModal()">+ 매출 추가</button>
+        <button class="btn btn-ghost" onclick="openExpenseModal()" style="border-color:var(--danger);color:var(--danger);">− 비용 추가</button>
       </div>
 
       <!-- 요약 카드 -->
@@ -553,18 +554,35 @@
         </div>
       </div>
 
-      <!-- 상세 내역 -->
-      <div class="section-card">
-        <div class="section-title">📋 결제 상세 내역</div>
+      <!-- 매출 상세 / 비용 상세 탭 -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn btn-primary" id="tabRevenue" onclick="switchTab('revenue')">📋 매출 내역</button>
+        <button class="btn btn-ghost" id="tabExpense" onclick="switchTab('expense')">💸 비용 내역</button>
+      </div>
+
+      <div class="section-card" id="revenueSection">
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>No.</th><th>결제일</th><th>회원명</th><th>프로그램</th>
-                <th>결제금액</th><th>결제수단</th><th>구분</th><th>관리</th>
+                <th>정가</th><th>할인</th><th>최종금액</th><th>결제수단</th><th>구분</th><th>관리</th>
               </tr>
             </thead>
             <tbody id="paymentTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-card" id="expenseSection" style="display:none;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th><th>날짜</th><th>항목</th><th>카테고리</th><th>금액</th><th>메모</th><th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTbody"></tbody>
           </table>
         </div>
       </div>
@@ -632,8 +650,18 @@
     <div style="font-size:12px;color:var(--primary);font-weight:700;margin:14px 0 10px;letter-spacing:0.5px;">결제 정보</div>
     <div class="form-row">
       <div class="form-group">
-        <label>결제금액</label>
-        <input id="mPayAmount" type="number" placeholder="자동입력 또는 직접 입력">
+        <label>결제금액 (정가)</label>
+        <input id="mPayAmount" type="number" placeholder="프로그램 선택 시 자동입력" oninput="calcFinalAmount()">
+      </div>
+      <div class="form-group">
+        <label>할인금액</label>
+        <input id="mDiscount" type="number" placeholder="0" value="0" oninput="calcFinalAmount()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>최종 결제금액</label>
+        <input id="mFinalAmount" type="number" readonly style="background:var(--bg);color:var(--primary);font-weight:700;">
       </div>
       <div class="form-group">
         <label>결제수단</label>
@@ -692,8 +720,18 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>결제금액</label>
-        <input id="rrAmount" type="number" placeholder="자동입력 또는 직접 입력">
+        <label>결제금액 (정가)</label>
+        <input id="rrAmount" type="number" placeholder="자동입력 또는 직접 입력" oninput="calcRrFinalAmount()">
+      </div>
+      <div class="form-group">
+        <label>할인금액</label>
+        <input id="rrDiscount" type="number" placeholder="0" value="0" oninput="calcRrFinalAmount()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>최종 결제금액</label>
+        <input id="rrFinalAmount" type="number" readonly style="background:var(--bg);color:var(--primary);font-weight:700;">
       </div>
       <div class="form-group">
         <label>결제수단</label>
@@ -758,22 +796,37 @@
     <h3 id="feeModalTitle">프로그램 추가</h3>
     <div class="form-row">
       <div class="form-group">
-        <label>프로그램명 *</label>
-        <input id="fClass" placeholder="예: PT 20회, 복싱 3개월">
+        <label>구분 *</label>
+        <select id="fType" onchange="onFeeTypeChange()">
+          <option value="수업">수업</option>
+          <option value="상품">상품 (회원수 미집계)</option>
+        </select>
       </div>
       <div class="form-group">
-        <label>유효기간</label>
-        <input id="fDuration" placeholder="예: 3개월, 6개월">
+        <label>프로그램명 *</label>
+        <input id="fClass" placeholder="예: PT 20회, 마우스피스">
       </div>
     </div>
-    <div class="form-row">
+    <div class="form-row" id="fDurationRow">
+      <div class="form-group">
+        <label>유효기간</label>
+        <input id="fDuration" placeholder="예: 3개월, 6개월 (없으면 빈칸)">
+      </div>
       <div class="form-group">
         <label>횟수 (횟수제인 경우)</label>
         <input id="fSessions" type="number" placeholder="예: 20" min="0">
       </div>
+    </div>
+    <div class="form-row">
       <div class="form-group">
         <label>금액 *</label>
         <input id="fAmount" type="number" placeholder="500000">
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;padding-top:22px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="fSameDay" style="width:auto;">
+          <span>시작일 = 종료일 (1회성)</span>
+        </label>
       </div>
     </div>
     <div class="form-group">
@@ -791,17 +844,41 @@
 // ── CONFIG (여기서 암호 수정) ──
 const PASSWORD = "06131101"; // ← 이 암호를 원하시는 것으로 바꾸세요
 
+// ── DEFAULT FEES ──
+const DEFAULT_FEES = [
+  {id:'df01',class:'PT 1회',         type:'수업',duration:'',    sameDay:true, sessions:1,  amount:90000},
+  {id:'df02',class:'PT 10회',        type:'수업',duration:'2개월',sameDay:false,sessions:10, amount:790000},
+  {id:'df03',class:'PT 15회',        type:'수업',duration:'3개월',sameDay:false,sessions:15, amount:1050000},
+  {id:'df04',class:'PT 20회',        type:'수업',duration:'4개월',sameDay:false,sessions:20, amount:1400000},
+  {id:'df05',class:'PT 30회',        type:'수업',duration:'6개월',sameDay:false,sessions:30, amount:1950000},
+  {id:'df06',class:'2:1 PT 10회',    type:'수업',duration:'2개월',sameDay:false,sessions:10, amount:1200000},
+  {id:'df07',class:'2:1 PT 20회',    type:'수업',duration:'4개월',sameDay:false,sessions:20, amount:2000000},
+  {id:'df08',class:'그룹 1회',       type:'수업',duration:'',    sameDay:true, sessions:1,  amount:30000},
+  {id:'df09',class:'그룹 1개월',     type:'수업',duration:'1개월',sameDay:false,sessions:0, amount:190000},
+  {id:'df10',class:'그룹 3개월',     type:'수업',duration:'3개월',sameDay:false,sessions:0, amount:510000},
+  {id:'df11',class:'그룹 6개월',     type:'수업',duration:'6개월',sameDay:false,sessions:0, amount:990000},
+  {id:'df12',class:'그룹_오픈 1개월',type:'수업',duration:'1개월',sameDay:false,sessions:0, amount:150000},
+  {id:'df13',class:'그룹_오픈 3개월',type:'수업',duration:'3개월',sameDay:false,sessions:0, amount:450000},
+  {id:'df14',class:'그룹_체험 1개월',type:'수업',duration:'1개월',sameDay:false,sessions:0, amount:160000},
+  {id:'df15',class:'그룹_체험 3개월',type:'수업',duration:'3개월',sameDay:false,sessions:0, amount:480000},
+  {id:'df16',class:'이벤트 1개월',   type:'수업',duration:'1개월',sameDay:false,sessions:0, amount:160000},
+  {id:'df17',class:'이벤트 3개월',   type:'수업',duration:'3개월',sameDay:false,sessions:0, amount:450000},
+  {id:'df18',class:'마우스피스',     type:'상품',duration:'',    sameDay:true, sessions:0,  amount:10000},
+];
+
 // ── STATE ──
 let members  = JSON.parse(localStorage.getItem('kjy_members')  || '[]');
 let events   = JSON.parse(localStorage.getItem('kjy_events')   || '[]');
-let fees     = JSON.parse(localStorage.getItem('kjy_fees')     || '[]');
+let fees     = JSON.parse(localStorage.getItem('kjy_fees')     || 'null') || DEFAULT_FEES;
 let payments = JSON.parse(localStorage.getItem('kjy_payments') || '[]');
+let expenses = JSON.parse(localStorage.getItem('kjy_expenses') || '[]');
 let editMemberId = null, editEventId = null, editFeeId = null;
 let calYear, calMonth;
 
 function save() {
   localStorage.setItem('kjy_members',  JSON.stringify(members));
   localStorage.setItem('kjy_payments', JSON.stringify(payments));
+  localStorage.setItem('kjy_expenses', JSON.stringify(expenses));
   localStorage.setItem('kjy_events',  JSON.stringify(events));
   localStorage.setItem('kjy_fees',    JSON.stringify(fees));
 }
@@ -855,8 +932,13 @@ function memberStatus(m) {
 // ── DASHBOARD ──
 function renderDashboard() {
   const today = new Date(); today.setHours(0,0,0,0);
-  const expiring = members.filter(m => { const s=memberStatus(m); return s.diff>=0&&s.diff<=14; }).length;
-  const active   = members.filter(m => memberStatus(m).diff > 14).length;
+  // 수업 회원만 집계 (상품 구매자 제외)
+  const lessonMembers = members.filter(m => {
+    const fee = fees.find(f=>f.id===m.feeId);
+    return !fee || fee.type !== '상품';
+  });
+  const expiring = lessonMembers.filter(m => { const s=memberStatus(m); return s.diff>=0&&s.diff<=14; }).length;
+  const active   = lessonMembers.filter(m => memberStatus(m).diff > 14).length;
   const total    = active + expiring;
 
   document.getElementById('statGrid').innerHTML = [
@@ -954,6 +1036,18 @@ function renderMembers() {
   }).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:30px;">등록된 회원이 없습니다</td></tr>';
 }
 
+function calcFinalAmount() {
+  const amt      = parseInt(document.getElementById('mPayAmount').value)||0;
+  const discount = parseInt(document.getElementById('mDiscount').value)||0;
+  document.getElementById('mFinalAmount').value = Math.max(0, amt - discount);
+}
+
+function calcRrFinalAmount() {
+  const amt      = parseInt(document.getElementById('rrAmount').value)||0;
+  const discount = parseInt(document.getElementById('rrDiscount').value)||0;
+  document.getElementById('rrFinalAmount').value = Math.max(0, amt - discount);
+}
+
 function toggleGuardian() {
   const isMinor = document.getElementById('mMinor').checked;
   document.getElementById('guardianGroup').style.display = isMinor ? 'block' : 'none';
@@ -965,27 +1059,55 @@ function onProgramChange() {
   const fee = fees.find(f=>f.id===feeId);
   if (fee) {
     if (fee.sessions) document.getElementById('mTotal').value = fee.sessions;
-    if (fee.amount)   document.getElementById('mPayAmount').value = fee.amount;
-    autoCalcExpiry();
+    if (fee.amount) {
+      document.getElementById('mPayAmount').value = fee.amount;
+      document.getElementById('mDiscount').value = 0;
+      document.getElementById('mFinalAmount').value = fee.amount;
+    }
+    // 시작일이 이미 입력돼있으면 종료일 자동계산
+    const startVal = document.getElementById('mStart').value;
+    if (startVal) {
+      const expiry = calcExpiryFromStart(startVal, fee);
+      if (expiry) document.getElementById('mExpiry').value = expiry;
+    }
   }
+}
+
+function calcExpiryFromStart(startStr, fee) {
+  if (!startStr) return '';
+  const start = new Date(startStr + 'T00:00:00');
+  if (fee.sameDay) return startStr; // 시작일 = 종료일
+  const dur = fee.duration || '';
+  if (!dur) return '';
+  const mMatch = dur.match(/(\d+)\s*개월/);
+  const yMatch = dur.match(/(\d+)\s*년/);
+  const wMatch = dur.match(/(\d+)\s*주/);
+  const end = new Date(start);
+  if (mMatch) {
+    // 달력 기준: 2월5일 + 1개월 = 3월5일
+    end.setMonth(end.getMonth() + parseInt(mMatch[1]));
+  } else if (yMatch) {
+    end.setFullYear(end.getFullYear() + parseInt(yMatch[1]));
+  } else if (wMatch) {
+    end.setDate(end.getDate() + parseInt(wMatch[1]) * 7);
+  } else {
+    return '';
+  }
+  // 종료일은 시작일 기준 같은 날짜 (ex: 2/5 → 3/5)
+  return end.toISOString().slice(0, 10);
 }
 
 function autoCalcExpiry() {
   const startVal = document.getElementById('mStart').value;
   const feeId = document.getElementById('mClass').value;
-  const fee = fees.find(f=>f.id===feeId);
-  if (!startVal || !fee?.duration) return;
-  const start = new Date(startVal);
-  const dur = fee.duration;
-  // parse duration like "3개월", "6개월", "1년"
-  const mMatch = dur.match(/(\d+)\s*개월/);
-  const yMatch = dur.match(/(\d+)\s*년/);
-  const wMatch = dur.match(/(\d+)\s*주/);
-  if (mMatch) start.setMonth(start.getMonth()+parseInt(mMatch[1]));
-  else if (yMatch) start.setFullYear(start.getFullYear()+parseInt(yMatch[1]));
-  else if (wMatch) start.setDate(start.getDate()+parseInt(wMatch[1])*7);
-  start.setDate(start.getDate()-1);
-  document.getElementById('mExpiry').value = start.toISOString().slice(0,10);
+  const fee = fees.find(f => f.id === feeId);
+  if (!startVal) return;
+  // 결제일 자동 = 시작일
+  const payDateEl = document.getElementById('mPayDate');
+  if (!payDateEl.value) payDateEl.value = startVal;
+  if (!fee) return;
+  const expiry = calcExpiryFromStart(startVal, fee);
+  if (expiry) document.getElementById('mExpiry').value = expiry;
 }
 
 function openMemberModal(id) {
@@ -1001,14 +1123,19 @@ function openMemberModal(id) {
   document.getElementById('mStart').value     = m?.start||'';
   document.getElementById('mExpiry').value    = m?.expiry||'';
   document.getElementById('mPayAmount').value = m?.payAmount||'';
+  document.getElementById('mDiscount').value  = m?.discount||0;
+  document.getElementById('mFinalAmount').value = m?.finalAmount||m?.payAmount||'';
   document.getElementById('mPayMethod').value = m?.payMethod||'카드';
   document.getElementById('mPayDate').value   = m?.payDate||'';
   document.getElementById('mReregCount').value= m?.reregHistory?.length||0;
   document.getElementById('mNote').value      = m?.note||'';
   // populate program select
   const sel = document.getElementById('mClass');
+  const lessonFees  = fees.filter(f=>f.type!=='상품');
+  const productFees = fees.filter(f=>f.type==='상품');
   sel.innerHTML = '<option value="">-- 프로그램 선택 --</option>' +
-    fees.map(f=>`<option value="${f.id}" ${m?.feeId===f.id?'selected':''}>${f.class}${f.amount?' ('+Number(f.amount).toLocaleString()+'원)':''}</option>`).join('');
+    (lessonFees.length ? '<optgroup label="📋 수업">' + lessonFees.map(f=>`<option value="${f.id}" ${m?.feeId===f.id?'selected':''}>${f.class}${f.amount?' ('+Number(f.amount).toLocaleString()+'원)':''}</option>`).join('') + '</optgroup>' : '') +
+    (productFees.length ? '<optgroup label="🛍️ 상품">' + productFees.map(f=>`<option value="${f.id}" ${m?.feeId===f.id?'selected':''}>${f.class}${f.amount?' ('+Number(f.amount).toLocaleString()+'원)':''}</option>`).join('') + '</optgroup>' : '');
   document.getElementById('memberModal').classList.add('open');
 }
 
@@ -1030,6 +1157,8 @@ function saveMember() {
     total:      parseInt(document.getElementById('mTotal').value)||0,
     start:      document.getElementById('mStart').value,
     payAmount:  parseInt(document.getElementById('mPayAmount').value)||0,
+    discount:   parseInt(document.getElementById('mDiscount').value)||0,
+    finalAmount:parseInt(document.getElementById('mFinalAmount').value)||0,
     payMethod:  document.getElementById('mPayMethod').value,
     payDate:    document.getElementById('mPayDate').value,
     note:       document.getElementById('mNote').value.trim(),
@@ -1039,7 +1168,7 @@ function saveMember() {
   if (editMemberId) members = members.map(m=>m.id===editMemberId?obj:m);
   else members.push(obj);
   // 신규 등록 시 결제내역 자동 생성
-  if (isNew && obj.payAmount > 0 && obj.payDate) {
+  if (isNew && obj.finalAmount > 0 && obj.payDate) {
     payments.push({
       id: uid(),
       date: obj.payDate,
@@ -1048,6 +1177,8 @@ function saveMember() {
       feeId: obj.feeId,
       feeName: fee?.class||'',
       amount: obj.payAmount,
+      discount: obj.discount,
+      finalAmount: obj.finalAmount,
       method: obj.payMethod,
       type: '신규',
       note: '',
@@ -1074,6 +1205,8 @@ function openReregModal(id) {
   document.getElementById('rrStart').value = '';
   document.getElementById('rrExpiry').value = '';
   document.getElementById('rrAmount').value = '';
+  document.getElementById('rrDiscount').value = 0;
+  document.getElementById('rrFinalAmount').value = '';
   document.getElementById('rrTotal').value = '';
   document.getElementById('rrMethod').value = '카드';
   document.getElementById('reregModal').classList.add('open');
@@ -1084,7 +1217,11 @@ function onRrProgramChange() {
   const fee = fees.find(f=>f.id===feeId);
   if (fee) {
     if (fee.sessions) document.getElementById('rrTotal').value = fee.sessions;
-    if (fee.amount)   document.getElementById('rrAmount').value = fee.amount;
+    if (fee.amount) {
+      document.getElementById('rrAmount').value = fee.amount;
+      document.getElementById('rrDiscount').value = 0;
+      document.getElementById('rrFinalAmount').value = fee.amount;
+    }
     autoCalcRrExpiry();
   }
 }
@@ -1092,18 +1229,11 @@ function onRrProgramChange() {
 function autoCalcRrExpiry() {
   const startVal = document.getElementById('rrStart').value;
   const feeId = document.getElementById('rrClass').value;
-  const fee = fees.find(f=>f.id===feeId);
-  if (!startVal || !fee?.duration) return;
-  const start = new Date(startVal);
-  const dur = fee.duration;
-  const mMatch = dur.match(/(\d+)\s*개월/);
-  const yMatch = dur.match(/(\d+)\s*년/);
-  const wMatch = dur.match(/(\d+)\s*주/);
-  if (mMatch) start.setMonth(start.getMonth()+parseInt(mMatch[1]));
-  else if (yMatch) start.setFullYear(start.getFullYear()+parseInt(yMatch[1]));
-  else if (wMatch) start.setDate(start.getDate()+parseInt(wMatch[1])*7);
-  start.setDate(start.getDate()-1);
-  document.getElementById('rrExpiry').value = start.toISOString().slice(0,10);
+  const fee = fees.find(f => f.id === feeId);
+  if (!startVal) return;
+  if (!fee) return;
+  const expiry = calcExpiryFromStart(startVal, fee);
+  if (expiry) document.getElementById('rrExpiry').value = expiry;
 }
 
 function saveRereg() {
@@ -1112,13 +1242,15 @@ function saveRereg() {
   if (!feeId || !expiry) return alert('프로그램과 만료일은 필수입니다!');
   const fee = fees.find(f=>f.id===feeId);
   const payDate = document.getElementById('rrStart').value || new Date().toISOString().slice(0,10);
-  const payAmount = parseInt(document.getElementById('rrAmount').value)||0;
-  const payMethod = document.getElementById('rrMethod').value;
+  const payAmount  = parseInt(document.getElementById('rrAmount').value)||0;
+  const discount   = parseInt(document.getElementById('rrDiscount').value)||0;
+  const finalAmount= parseInt(document.getElementById('rrFinalAmount').value)||Math.max(0,payAmount-discount);
+  const payMethod  = document.getElementById('rrMethod').value;
   const record = {
     date: payDate, feeId, class: fee?.class||'',
     start: document.getElementById('rrStart').value,
     expiry, total: parseInt(document.getElementById('rrTotal').value)||0,
-    amount: payAmount, method: payMethod,
+    amount: payAmount, discount, finalAmount, method: payMethod,
   };
   const m = members.find(x=>x.id===reregMemberId);
   members = members.map(mb=>{
@@ -1132,12 +1264,13 @@ function saveRereg() {
       reregHistory: [...(mb.reregHistory||[]), record],
     };
   });
-  if (payAmount > 0) {
+  if (finalAmount > 0 || payAmount > 0) {
     payments.push({
       id: uid(), date: payDate,
       memberId: reregMemberId, memberName: m?.name||'',
       feeId, feeName: fee?.class||'',
-      amount: payAmount, method: payMethod, type: '재등록', note: '',
+      amount: payAmount, discount, finalAmount,
+      method: payMethod, type: '재등록', note: '',
     });
   }
   save(); closeModal('reregModal'); renderMembers(); renderDashboard(); renderSales();
@@ -1229,8 +1362,9 @@ function renderFees() {
   document.getElementById('feeTbody').innerHTML = fees.length ? fees.map((f,i)=>`
     <tr>
       <td>${i+1}</td>
+      <td><span class="badge ${f.type==='상품'?'badge-orange':'badge-blue'}">${f.type||'수업'}</span></td>
       <td><strong>${f.class}</strong></td>
-      <td>${f.duration||'-'}</td>
+      <td>${f.sameDay ? '<span class="badge badge-gray">당일</span>' : f.duration ? f.duration : '-'}</td>
       <td>${f.sessions?f.sessions+'회':'-'}</td>
       <td><strong>${Number(f.amount).toLocaleString()}원</strong></td>
       <td style="font-size:12px;color:var(--text2);">${f.note||'-'}</td>
@@ -1238,7 +1372,17 @@ function renderFees() {
         <button class="btn btn-ghost btn-sm" onclick="openFeeModal('${f.id}')">수정</button>
         <button class="btn btn-danger btn-sm" onclick="deleteFee('${f.id}')">삭제</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:30px;">등록된 프로그램이 없습니다</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">등록된 프로그램이 없습니다</td></tr>';
+}
+
+function onFeeTypeChange() {
+  const isProduct = document.getElementById('fType').value === '상품';
+  document.getElementById('fDurationRow').style.display = isProduct ? 'none' : 'grid';
+  if (isProduct) {
+    document.getElementById('fSameDay').checked = true;
+    document.getElementById('fDuration').value = '';
+    document.getElementById('fSessions').value = '';
+  }
 }
 
 function openFeeModal(id) {
@@ -1246,10 +1390,14 @@ function openFeeModal(id) {
   const f = id ? fees.find(x=>x.id===id) : null;
   document.getElementById('feeModalTitle').textContent = id ? '프로그램 수정' : '프로그램 추가';
   document.getElementById('fClass').value    = f?.class||'';
+  document.getElementById('fType').value     = f?.type||'수업';
   document.getElementById('fDuration').value = f?.duration||'';
   document.getElementById('fSessions').value = f?.sessions||'';
   document.getElementById('fAmount').value   = f?.amount||'';
+  document.getElementById('fSameDay').checked= f?.sameDay||false;
   document.getElementById('fNote').value     = f?.note||'';
+  // 상품이면 유효기간 행 숨김
+  document.getElementById('fDurationRow').style.display = (f?.type==='상품') ? 'none' : 'grid';
   document.getElementById('feeModal').classList.add('open');
 }
 
@@ -1259,8 +1407,10 @@ function saveFee() {
   if (!cls||!amt) return alert('프로그램명과 금액은 필수입니다!');
   const obj = {
     id: editFeeId||uid(),
+    type: document.getElementById('fType').value,
     class: cls,
     duration: document.getElementById('fDuration').value.trim(),
+    sameDay: document.getElementById('fSameDay').checked,
     sessions: parseInt(document.getElementById('fSessions').value)||0,
     amount: parseInt(amt),
     note: document.getElementById('fNote').value.trim(),
@@ -1297,17 +1447,21 @@ function renderSales() {
   if (methodF) list = list.filter(p=>p.method===methodF);
   list.sort((a,b)=>b.date.localeCompare(a.date));
 
-  const total   = list.reduce((s,p)=>s+p.amount,0);
-  const countNew = list.filter(p=>p.type==='신규').length;
-  const countRe  = list.filter(p=>p.type==='재등록').length;
-  const avgAmt   = list.length ? Math.round(total/list.length) : 0;
+  let expList = [...expenses];
+  if (monthF) expList = expList.filter(e=>e.date?.startsWith(monthF));
+  expList.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const totalRevenue  = list.reduce((s,p)=>s+(p.finalAmount||p.amount),0);
+  const totalExpense  = expList.reduce((s,e)=>s+e.amount,0);
+  const netProfit     = totalRevenue - totalExpense;
+  const totalDiscount = list.reduce((s,p)=>s+(p.discount||0),0);
 
   // summary cards
   document.getElementById('salesSummary').innerHTML = [
-    {icon:'💰',label:'총 매출',value:total.toLocaleString()+'원',color:'var(--primary)'},
-    {icon:'📋',label:'결제 건수',value:list.length+'건',color:'var(--success)'},
-    {icon:'🆕',label:'신규',value:countNew+'건',color:'var(--accent2)'},
-    {icon:'🔄',label:'재등록',value:countRe+'건',color:'var(--primary-light)'},
+    {icon:'💰',label:'총 매출',value:totalRevenue.toLocaleString()+'원',color:'var(--primary)'},
+    {icon:'💸',label:'총 비용',value:totalExpense.toLocaleString()+'원',color:'var(--danger)'},
+    {icon:'📈',label:'순이익',value:netProfit.toLocaleString()+'원',color:netProfit>=0?'var(--success)':'var(--danger)'},
+    {icon:'🎁',label:'총 할인',value:totalDiscount.toLocaleString()+'원',color:'var(--warning)'},
   ].map(s=>`
     <div class="stat-card">
       <div class="stat-icon">${s.icon}</div>
@@ -1317,9 +1471,9 @@ function renderSales() {
       </div>
     </div>`).join('');
 
-  // by method
+  // by method (매출만)
   const byMethod = {};
-  list.forEach(p=>{ byMethod[p.method]=(byMethod[p.method]||0)+p.amount; });
+  list.forEach(p=>{ byMethod[p.method]=(byMethod[p.method]||0)+(p.finalAmount||p.amount); });
   document.getElementById('salesByMethod').innerHTML = Object.entries(byMethod).length
     ? Object.entries(byMethod).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
         const pct = total ? Math.round(v/total*100) : 0;
@@ -1337,7 +1491,7 @@ function renderSales() {
 
   // by program
   const byProg = {};
-  list.forEach(p=>{ const k=p.feeName||'기타'; byProg[k]=(byProg[k]||0)+p.amount; });
+  list.forEach(p=>{ const k=p.feeName||'기타'; byProg[k]=(byProg[k]||0)+(p.finalAmount||p.amount); });
   document.getElementById('salesByProgram').innerHTML = Object.entries(byProg).length
     ? Object.entries(byProg).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
         const pct = total ? Math.round(v/total*100) : 0;
@@ -1360,7 +1514,9 @@ function renderSales() {
         <td>${p.date}</td>
         <td>${p.memberName||'-'}</td>
         <td>${p.feeName||'-'}</td>
-        <td><strong>${p.amount.toLocaleString()}원</strong></td>
+        <td style="color:var(--text3);">${p.amount?Number(p.amount).toLocaleString()+'원':'-'}</td>
+        <td style="color:var(--danger);">${p.discount?'-'+Number(p.discount).toLocaleString()+'원':'-'}</td>
+        <td><strong style="color:var(--primary);">${Number(p.finalAmount||p.amount).toLocaleString()}원</strong></td>
         <td><span class="badge badge-blue">${p.method}</span></td>
         <td><span class="badge ${p.type==='신규'?'badge-green':p.type==='재등록'?'badge-orange':'badge-gray'}">${p.type||'-'}</span></td>
         <td>
@@ -1368,6 +1524,62 @@ function renderSales() {
         </td>
       </tr>`).join('')
     : '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">결제 내역이 없습니다</td></tr>';
+
+  // 비용 테이블
+  document.getElementById('expenseTbody').innerHTML = expList.length
+    ? expList.map((e,i)=>`<tr>
+        <td>${i+1}</td>
+        <td>${e.date}</td>
+        <td><strong>${e.name}</strong></td>
+        <td><span class="badge badge-orange">${e.category}</span></td>
+        <td><strong style="color:var(--danger);">${e.amount.toLocaleString()}원</strong></td>
+        <td style="font-size:12px;color:var(--text2);">${e.note||'-'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.id}')">삭제</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:30px;">등록된 비용이 없습니다</td></tr>';
+}
+
+function switchTab(tab) {
+  const isRevenue = tab === 'revenue';
+  document.getElementById('revenueSection').style.display = isRevenue ? 'block' : 'none';
+  document.getElementById('expenseSection').style.display = isRevenue ? 'none' : 'block';
+  document.getElementById('tabRevenue').className = isRevenue ? 'btn btn-primary' : 'btn btn-ghost';
+  document.getElementById('tabExpense').className = isRevenue ? 'btn btn-ghost' : 'btn btn-primary';
+}
+
+let editExpenseId = null;
+function openExpenseModal(id) {
+  editExpenseId = id||null;
+  const e = id ? expenses.find(x=>x.id===id) : null;
+  document.getElementById('expenseModalTitle').textContent = id ? '비용 수정' : '비용 추가';
+  document.getElementById('exDate').value     = e?.date || new Date().toISOString().slice(0,10);
+  document.getElementById('exCategory').value = e?.category || '월세';
+  document.getElementById('exName').value     = e?.name||'';
+  document.getElementById('exAmount').value   = e?.amount||'';
+  document.getElementById('exNote').value     = e?.note||'';
+  document.getElementById('expenseModal').classList.add('open');
+}
+
+function saveExpense() {
+  const date   = document.getElementById('exDate').value;
+  const name   = document.getElementById('exName').value.trim();
+  const amount = parseInt(document.getElementById('exAmount').value);
+  if (!date||!name||!amount) return alert('날짜, 항목명, 금액은 필수입니다!');
+  const obj = {
+    id: editExpenseId||uid(), date, name, amount,
+    category: document.getElementById('exCategory').value,
+    note: document.getElementById('exNote').value.trim(),
+  };
+  if (editExpenseId) expenses = expenses.map(e=>e.id===editExpenseId?obj:e);
+  else expenses.push(obj);
+  save(); populateSalesMonthFilter(); closeModal('expenseModal'); renderSales();
+  switchTab('expense');
+}
+
+function deleteExpense(id) {
+  if (!confirm('비용 내역을 삭제할까요?')) return;
+  expenses = expenses.filter(e=>e.id!==id);
+  save(); renderSales();
 }
 
 let editPaymentId = null;
@@ -1476,6 +1688,49 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('paymentModal')">취소</button>
       <button class="btn btn-primary" onclick="savePayment()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 비용 모달 -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal">
+    <h3 id="expenseModalTitle">비용 추가</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>날짜 *</label>
+        <input id="exDate" type="date">
+      </div>
+      <div class="form-group">
+        <label>카테고리</label>
+        <select id="exCategory">
+          <option value="월세">월세</option>
+          <option value="관리비">관리비</option>
+          <option value="광고비">광고비</option>
+          <option value="인건비">인건비</option>
+          <option value="운동기구">운동기구</option>
+          <option value="소모품">소모품</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>항목명 *</label>
+        <input id="exName" placeholder="예: 8월 월세, 인스타 광고">
+      </div>
+      <div class="form-group">
+        <label>금액 *</label>
+        <input id="exAmount" type="number" placeholder="1500000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>메모</label>
+      <input id="exNote" placeholder="추가 메모">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('expenseModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveExpense()">저장</button>
     </div>
   </div>
 </div>
